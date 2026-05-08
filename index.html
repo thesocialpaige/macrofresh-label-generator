@@ -376,6 +376,175 @@
   }
   .btn-download:hover { background: var(--green); color: #fff; }
 
+  /* ── LIBRARY PANEL ── */
+  .library-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: 420px;
+    height: 100vh;
+    background: #0d0d0d;
+    border-left: 1px solid var(--border);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform .3s ease;
+  }
+  .library-panel.open { transform: translateX(0); }
+
+  .library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .library-title { font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+  .library-title span { color: var(--green); }
+
+  .btn-close-library {
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 14px;
+    width: 30px; height: 30px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+  }
+  .btn-close-library:hover { border-color: #666; color: var(--white); }
+
+  .library-search {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .library-search input {
+    width: 100%;
+    background: #111;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .library-search input:focus { border-color: var(--green); }
+
+  .library-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .library-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .library-item:hover { border-color: var(--green); background: #1f1f1f; }
+
+  .library-item-name { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .library-item-meta { font-size: 10px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .library-item-meta span { background: #222; padding: 2px 8px; border-radius: 10px; }
+
+  .library-item-actions { display: flex; gap: 8px; }
+  .btn-load-meal {
+    flex: 1;
+    padding: 7px 12px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-load-meal:hover { background: var(--green-dark); }
+  .btn-delete-meal {
+    padding: 7px 10px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-delete-meal:hover { border-color: var(--red); color: var(--red); }
+
+  .library-empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .library-empty span { font-size: 32px; display: block; margin-bottom: 12px; }
+
+  .library-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 199;
+    display: none;
+  }
+  .library-overlay.open { display: block; }
+
+  .btn-open-library {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--white);
+    border: 1.5px solid var(--green);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-open-library:hover { background: var(--green); }
+
+  .btn-save-meal {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--green);
+    border-radius: 6px;
+    color: var(--green);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-save-meal:hover { background: var(--green); color: #fff; }
+  .btn-save-meal.saved { background: #1a2a1a; border-color: #2a4a2a; color: #5cb135; }
+
+  .library-count {
+    font-size: 10px;
+    background: var(--green);
+    color: #fff;
+    border-radius: 10px;
+    padding: 2px 7px;
+    font-weight: 800;
+    margin-left: 4px;
+  }
+
   /* scrollbar */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -397,14 +566,43 @@
     <!-- GLOBAL SETTINGS -->
     <div class="global-section">
       <div class="section-title">Weekly Settings</div>
-      <div class="global-row">
+      <div class="global-row" style="margin-bottom:12px;">
         <div class="field-group">
           <label>Best By Date</label>
           <input type="text" id="best-by" placeholder="e.g. 5/11" oninput="updatePreview()">
         </div>
-        <div class="field-group" style="max-width:200px;">
+        <div class="field-group">
           <label>Bottom Tagline</label>
           <input type="text" id="tagline" value="Chef Prepared · No Seed Oils · Fresh Ingredients" oninput="updatePreview()">
+        </div>
+      </div>
+      <div class="global-row">
+        <div class="field-group" style="max-width:160px;">
+          <label>Ingredients Font Size</label>
+          <select id="ing-font-size" oninput="updatePreview()">
+            <option value="5">5pt — Very Small</option>
+            <option value="5.5">5.5pt — Small</option>
+            <option value="6" selected>6pt — Default</option>
+            <option value="6.5">6.5pt — Medium</option>
+            <option value="7">7pt — Large</option>
+            <option value="7.5">7.5pt — Larger</option>
+            <option value="8">8pt — Very Large</option>
+          </select>
+        </div>
+        <div class="field-group" style="max-width:160px;">
+          <label>Contains Font Size</label>
+          <select id="alg-font-size" oninput="updatePreview()">
+            <option value="5">5pt — Very Small</option>
+            <option value="5.5">5.5pt — Small</option>
+            <option value="6" selected>6pt — Default</option>
+            <option value="6.5">6.5pt — Medium</option>
+            <option value="7">7pt — Large</option>
+            <option value="7.5">7.5pt — Larger</option>
+            <option value="8">8pt — Very Large</option>
+          </select>
+        </div>
+        <div class="field-group" style="max-width:200px; align-self:flex-end;">
+          <p style="font-size:10px;color:var(--muted);line-height:1.5;">Adjust if ingredients overflow or leave too much space</p>
         </div>
       </div>
     </div>
@@ -412,7 +610,10 @@
     <!-- MEALS -->
     <div class="meals-header">
       <div class="meals-title">This Week's Meals</div>
-      <button class="btn-add-meal" onclick="addMeal()">+ Add Meal</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-open-library" onclick="openLibrary()">📚 Meal Library <span class="library-count" id="library-count">0</span></button>
+        <button class="btn-add-meal" onclick="addMeal()">+ Add Meal</button>
+      </div>
     </div>
 
     <div id="meals-container">
@@ -477,9 +678,181 @@
   </div>
 </div>
 
+<!-- LIBRARY OVERLAY -->
+<div class="library-overlay" id="library-overlay" onclick="closeLibrary()"></div>
+
+<!-- LIBRARY PANEL -->
+<div class="library-panel" id="library-panel">
+  <div class="library-header">
+    <div class="library-title">📚 Meal <span>Library</span></div>
+    <button class="btn-close-library" onclick="closeLibrary()">✕</button>
+  </div>
+  <div class="library-search">
+    <input type="text" id="library-search" placeholder="Search meals..." oninput="renderLibrary()">
+  </div>
+  <div class="library-list" id="library-list">
+    <!-- populated by JS -->
+  </div>
+</div>
+
 <script>
   let mealCount = 0;
   let outputBytes = null;
+
+  // ── LIBRARY ──
+  const LIBRARY_KEY = 'macrofresh_meal_library';
+
+  function getLibrary() {
+    try { return JSON.parse(localStorage.getItem(LIBRARY_KEY) || '{}'); }
+    catch { return {}; }
+  }
+
+  function saveLibrary(lib) {
+    localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib));
+    updateLibraryCount();
+  }
+
+  function updateLibraryCount() {
+    const lib = getLibrary();
+    document.getElementById('library-count').textContent = Object.keys(lib).length;
+  }
+
+  function saveMealToLibrary(id) {
+    const name = document.getElementById(`name-${id}`)?.value?.trim();
+    if (!name) { alert('Please enter a meal name before saving.'); return; }
+
+    const lib = getLibrary();
+    const variants = [];
+    const variantBlocks = document.querySelectorAll(`[id^="variant-${id}-"]:not(#variant-${id}-standard)`);
+    variantBlocks.forEach(vb => {
+      const vid = vb.id.replace(`variant-${id}-`, '');
+      variants.push({
+        name: document.getElementById(`variant-name-${id}-${vid}`)?.value || '',
+        carbs: document.getElementById(`vcarbs-${id}-${vid}`)?.value || '',
+        fat: document.getElementById(`vfat-${id}-${vid}`)?.value || '',
+        protein: document.getElementById(`vprotein-${id}-${vid}`)?.value || '',
+        calories: document.getElementById(`vcalories-${id}-${vid}`)?.value || '',
+        ingredients: document.getElementById(`vingredients-${id}-${vid}`)?.value || '',
+        allergens: document.getElementById(`vallergens-${id}-${vid}`)?.value || '',
+      });
+    });
+
+    const mealKey = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    lib[mealKey] = {
+      name,
+      carbs: document.getElementById(`carbs-${id}`)?.value || '',
+      fat: document.getElementById(`fat-${id}`)?.value || '',
+      protein: document.getElementById(`protein-${id}`)?.value || '',
+      calories: document.getElementById(`calories-${id}`)?.value || '',
+      ingredients: document.getElementById(`ingredients-${id}`)?.value || '',
+      allergens: document.getElementById(`allergens-${id}`)?.value || '',
+      variants,
+      savedAt: new Date().toLocaleDateString('en-US'),
+    };
+    saveLibrary(lib);
+
+    const btn = document.getElementById(`save-btn-${id}`);
+    btn.textContent = '✓ Saved!';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = '💾 Save'; btn.classList.remove('saved'); }, 2000);
+    renderLibrary();
+  }
+
+  function loadMealFromLibrary(mealKey) {
+    const lib = getLibrary();
+    const meal = lib[mealKey];
+    if (!meal) return;
+
+    addMeal();
+    const id = mealCount;
+
+    setTimeout(() => {
+      document.getElementById(`name-${id}`).value = meal.name;
+      document.getElementById(`carbs-${id}`).value = meal.carbs;
+      document.getElementById(`fat-${id}`).value = meal.fat;
+      document.getElementById(`protein-${id}`).value = meal.protein;
+      document.getElementById(`calories-${id}`).value = meal.calories;
+      document.getElementById(`ingredients-${id}`).value = meal.ingredients;
+      document.getElementById(`allergens-${id}`).value = meal.allergens;
+
+      meal.variants?.forEach(v => {
+        addVariant(id);
+        const vid = variantCounts[id];
+        if (document.getElementById(`variant-name-${id}-${vid}`)) {
+          document.getElementById(`variant-name-${id}-${vid}`).value = v.name;
+          document.getElementById(`vcarbs-${id}-${vid}`).value = v.carbs;
+          document.getElementById(`vfat-${id}-${vid}`).value = v.fat;
+          document.getElementById(`vprotein-${id}-${vid}`).value = v.protein;
+          document.getElementById(`vcalories-${id}-${vid}`).value = v.calories;
+          document.getElementById(`vingredients-${id}-${vid}`).value = v.ingredients;
+          document.getElementById(`vallergens-${id}-${vid}`).value = v.allergens;
+        }
+      });
+
+      updateMealHeader(id);
+      updatePreview();
+      updateSummary();
+    }, 60);
+
+    closeLibrary();
+  }
+
+  function deleteMealFromLibrary(mealKey) {
+    if (!confirm('Remove this meal from the library?')) return;
+    const lib = getLibrary();
+    delete lib[mealKey];
+    saveLibrary(lib);
+    renderLibrary();
+  }
+
+  function renderLibrary() {
+    const lib = getLibrary();
+    const search = document.getElementById('library-search')?.value?.toLowerCase() || '';
+    const container = document.getElementById('library-list');
+    const keys = Object.keys(lib).filter(k => lib[k].name.toLowerCase().includes(search));
+
+    if (!keys.length) {
+      container.innerHTML = `<div class="library-empty">
+        <span>${search ? '🔍' : '📭'}</span>
+        ${search ? 'No meals match your search.' : 'Your library is empty.<br><br>Fill out a meal and click <strong>💾 Save</strong> to add it here. Saved meals persist week to week!'}
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = keys.sort((a,b) => lib[a].name.localeCompare(lib[b].name)).map(k => {
+      const m = lib[k];
+      const variantBadges = m.variants?.filter(v=>v.name).map(v => `<span>${v.name}</span>`).join('') || '';
+      return `<div class="library-item">
+        <div class="library-item-name">${m.name}</div>
+        <div class="library-item-meta">
+          <span>C: ${m.carbs}g</span>
+          <span>F: ${m.fat}g</span>
+          <span>P: ${m.protein}g</span>
+          <span>${m.calories} cal</span>
+          ${variantBadges}
+          <span style="color:#444;">Saved ${m.savedAt}</span>
+        </div>
+        <div class="library-item-actions">
+          <button class="btn-load-meal" onclick="loadMealFromLibrary('${k}')">+ Load into Form</button>
+          <button class="btn-delete-meal" onclick="deleteMealFromLibrary('${k}')">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function openLibrary() {
+    renderLibrary();
+    document.getElementById('library-panel').classList.add('open');
+    document.getElementById('library-overlay').classList.add('open');
+  }
+
+  function closeLibrary() {
+    document.getElementById('library-panel').classList.remove('open');
+    document.getElementById('library-overlay').classList.remove('open');
+  }
+
+  // Init library count on load
+  window.addEventListener('load', updateLibraryCount);
 
   // ── ADD MEAL ──
   function addMeal() {
@@ -497,6 +870,7 @@
           <div class="meal-card-meta" id="meal-meta-${id}">Enter meal details below</div>
         </div>
         <div class="meal-card-actions">
+          <button class="btn-save-meal" id="save-btn-${id}" onclick="event.stopPropagation();saveMealToLibrary(${id})">💾 Save</button>
           <button class="btn-remove" onclick="event.stopPropagation();removeMeal(${id})">Remove</button>
           <span class="chevron open" id="chevron-${id}">▼</span>
         </div>
@@ -780,172 +1154,162 @@
 
       const pdfDoc = await PDFLib.PDFDocument.create();
 
-      // Embed font
       const helveticaBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
       const helvetica = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-      const helveticaOblique = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaOblique);
+
+      // Word wrap helper
+      function wrapText(text, font, fontSize, maxWidth) {
+        const words = text.split(' ');
+        const lines = [];
+        let current = '';
+        words.forEach(word => {
+          const test = current ? current + ' ' + word : word;
+          if (font.widthOfTextAtSize(test, fontSize) > maxWidth && current) {
+            lines.push(current);
+            current = word;
+          } else {
+            current = test;
+          }
+        });
+        if (current) lines.push(current);
+        return lines;
+      }
+
+      const ingFontSz = parseFloat(document.getElementById('ing-font-size')?.value || 6);
+      const algFontSz = parseFloat(document.getElementById('alg-font-size')?.value || 6);
 
       for (let i = 0; i < labels.length; i++) {
         const label = labels[i];
         const page = pdfDoc.addPage([LW, LH]);
+        const PAD = 7;
+        const maxW = LW - PAD * 2;
 
         // ── HEADER BAR ──
-        const headerH = 18;
+        const headerH = 20;
         page.drawRectangle({ x: 0, y: LH - headerH, width: LW, height: headerH, color: PDFLib.rgb(0, 0, 0) });
-
         const headerText = 'MACRO FRESH MEALS';
-        const headerFontSize = 8;
-        const headerTextW = helveticaBold.widthOfTextAtSize(headerText, headerFontSize);
+        const headerSz = 10;
+        const headerW = helveticaBold.widthOfTextAtSize(headerText, headerSz);
         page.drawText(headerText, {
-          x: (LW - headerTextW) / 2,
-          y: LH - headerH + 5,
-          size: headerFontSize,
-          font: helveticaBold,
-          color: PDFLib.rgb(1, 1, 1),
+          x: (LW - headerW) / 2, y: LH - headerH + 6,
+          size: headerSz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
         });
 
-        // ── FOOTER BAR ──
-        const footerH = 14;
+        // ── FOOTER BAR (taller, vertically centered text) ──
+        const footerH = 20;
         page.drawRectangle({ x: 0, y: 0, width: LW, height: footerH, color: PDFLib.rgb(0, 0, 0) });
 
-        // Tagline left
+        // Tagline left — vertically centered in footer
+        const tagSz = 5.5;
         if (tagline) {
           page.drawText(tagline, {
-            x: 6,
-            y: 4,
-            size: 4,
-            font: helveticaBold,
-            color: PDFLib.rgb(1, 1, 1),
-            maxWidth: 130,
+            x: PAD, y: (footerH - tagSz) / 2,
+            size: tagSz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
           });
         }
 
-        // Best by + keep refrigerated right
+        // Best By + Keep Refrigerated — right side, stacked
+        const bySz = 5.5;
         if (label.bestBy) {
           const byText = `Best By: ${label.bestBy}`;
-          const byW = helveticaBold.widthOfTextAtSize(byText, 5);
-          page.drawText(byText, { x: LW - byW - 5, y: 8, size: 5, font: helveticaBold, color: PDFLib.rgb(0.8, 0.8, 0.8) });
+          const byW = helveticaBold.widthOfTextAtSize(byText, bySz);
+          page.drawText(byText, { x: LW - byW - PAD, y: footerH / 2 + 1, size: bySz, font: helveticaBold, color: PDFLib.rgb(1,1,1) });
         }
         const refText = 'Keep Refrigerated';
-        const refW = helvetica.widthOfTextAtSize(refText, 4.5);
-        page.drawText(refText, { x: LW - refW - 5, y: 2.5, size: 4.5, font: helvetica, color: PDFLib.rgb(0.6, 0.6, 0.6) });
+        const refW = helvetica.widthOfTextAtSize(refText, bySz);
+        page.drawText(refText, { x: LW - refW - PAD, y: footerH / 2 - 6, size: bySz, font: helvetica, color: PDFLib.rgb(0.7,0.7,0.7) });
 
         // ── CONTENT AREA ──
-        const contentTop = LH - headerH - 4;
-        const contentBottom = footerH + 4;
-        const contentH = contentTop - contentBottom;
-        let y = contentTop;
+        let y = LH - headerH - 4;
+        const bottomLimit = footerH + 4;
 
-        // Variant badge if applicable
+        // Variant badge
         if (label.variant) {
-          const vText = `[ ${label.variant} ]`;
-          const vW = helveticaBold.widthOfTextAtSize(vText, 6);
+          const vSz = 7;
+          const vText = `— ${label.variant} —`;
+          const vW = helveticaBold.widthOfTextAtSize(vText, vSz);
           page.drawText(vText, {
-            x: (LW - vW) / 2,
-            y: y - 7,
-            size: 6,
-            font: helveticaBold,
-            color: PDFLib.rgb(0.3, 0.3, 0.3),
+            x: (LW - vW) / 2, y: y - 8,
+            size: vSz, font: helveticaBold, color: PDFLib.rgb(0.35, 0.35, 0.35),
           });
-          y -= 9;
+          y -= 11;
         }
 
-        // Meal name
-        const nameSize = label.name.length > 22 ? 10 : label.name.length > 16 ? 12 : 14;
-        const nameW = helveticaBold.widthOfTextAtSize(label.name, nameSize);
-        let nameX = (LW - nameW) / 2;
-
-        // Handle long names by wrapping
-        if (nameW > LW - 12) {
-          // wrap to two lines
-          const words = label.name.split(' ');
-          let line1 = '', line2 = '';
-          let mid = Math.ceil(words.length / 2);
-          line1 = words.slice(0, mid).join(' ');
-          line2 = words.slice(mid).join(' ');
-          const sz = 9;
-          const l1W = helveticaBold.widthOfTextAtSize(line1, sz);
-          const l2W = helveticaBold.widthOfTextAtSize(line2, sz);
-          page.drawText(line1, { x: (LW - l1W) / 2, y: y - 11, size: sz, font: helveticaBold, color: PDFLib.rgb(0, 0, 0) });
-          page.drawText(line2, { x: (LW - l2W) / 2, y: y - 22, size: sz, font: helveticaBold, color: PDFLib.rgb(0, 0, 0) });
-          y -= 26;
-        } else {
-          page.drawText(label.name, { x: nameX, y: y - 14, size: nameSize, font: helveticaBold, color: PDFLib.rgb(0, 0, 0) });
-          y -= 18;
+        // ── MEAL NAME ──
+        let nameSz = 16;
+        while (nameSz > 9 && helveticaBold.widthOfTextAtSize(label.name, nameSz) > maxW) {
+          nameSz -= 1;
         }
+        const nameLines = wrapText(label.name, helveticaBold, nameSz, maxW);
+        const nameLineH = nameSz + 2;
+        nameLines.forEach((line, li) => {
+          const lW = helveticaBold.widthOfTextAtSize(line, nameSz);
+          page.drawText(line, {
+            x: (LW - lW) / 2, y: y - nameLineH * (li + 1),
+            size: nameSz, font: helveticaBold, color: PDFLib.rgb(0, 0, 0),
+          });
+        });
+        y -= nameLineH * nameLines.length + 3;
 
-        // Divider
-        page.drawLine({ start: { x: 8, y: y - 2 }, end: { x: LW - 8, y: y - 2 }, thickness: 0.5, color: PDFLib.rgb(0.8, 0.8, 0.8) });
-        y -= 5;
+        // ── DIVIDER ──
+        page.drawLine({ start: { x: PAD, y }, end: { x: LW - PAD, y }, thickness: 0.75, color: PDFLib.rgb(0, 0, 0) });
+        y -= 3;
 
-        // Macros row
+        // ── MACROS (tighter spacing) ──
         const macros = [
-          { label: 'CARBS', val: label.carbs ? `${label.carbs}g` : '–' },
-          { label: 'FAT', val: label.fat ? `${label.fat}g` : '–' },
+          { label: 'CARBS',   val: label.carbs   ? `${label.carbs}g`   : '–' },
+          { label: 'FAT',     val: label.fat     ? `${label.fat}g`     : '–' },
           { label: 'PROTEIN', val: label.protein ? `${label.protein}g` : '–' },
-          { label: 'CALORIES', val: label.calories || '–' },
+          { label: 'CALS',    val: label.calories || '–' },
         ];
         const macroColW = LW / 4;
+        const macroLabelSz = 5.5;
+        const macroValSz = 10;
+        const macroLabelY = y - 6;
+        const macroValY = y - 16;
         macros.forEach((m, idx) => {
           const cx = macroColW * idx + macroColW / 2;
-          const lW = helveticaBold.widthOfTextAtSize(m.label, 5);
-          const vW = helveticaBold.widthOfTextAtSize(m.val, 9);
-          page.drawText(m.label, { x: cx - lW / 2, y: y - 6, size: 5, font: helveticaBold, color: PDFLib.rgb(0.4, 0.4, 0.4) });
-          page.drawText(m.val, { x: cx - vW / 2, y: y - 16, size: 9, font: helveticaBold, color: PDFLib.rgb(0, 0, 0) });
+          const lW = helveticaBold.widthOfTextAtSize(m.label, macroLabelSz);
+          const vW = helveticaBold.widthOfTextAtSize(m.val, macroValSz);
+          page.drawText(m.label, { x: cx - lW/2, y: macroLabelY, size: macroLabelSz, font: helveticaBold, color: PDFLib.rgb(0.45,0.45,0.45) });
+          page.drawText(m.val,   { x: cx - vW/2, y: macroValY,   size: macroValSz,   font: helveticaBold, color: PDFLib.rgb(0,0,0) });
         });
         y -= 20;
 
-        // Divider
-        page.drawLine({ start: { x: 8, y: y - 2 }, end: { x: LW - 8, y: y - 2 }, thickness: 0.5, color: PDFLib.rgb(0.8, 0.8, 0.8) });
-        y -= 5;
+        // ── DIVIDER ──
+        page.drawLine({ start: { x: PAD, y }, end: { x: LW - PAD, y }, thickness: 0.75, color: PDFLib.rgb(0,0,0) });
+        y -= 3;
 
-        // Ingredients
-        const ingFontSize = 5;
-        const ingLabel = 'Ingredients: ';
-        const ingLabelW = helveticaBold.widthOfTextAtSize(ingLabel, ingFontSize);
-        const maxW = LW - 12;
-        const availableH = y - contentBottom - 2;
+        // ── INGREDIENTS ──
+        const ingSz = ingFontSz;
+        const ingLineH = ingSz + 2;
 
-        // Simple word wrap
-        const fullText = label.ingredients + (label.allergens ? ` Contains: ${label.allergens}.` : '');
-        const words = fullText.split(' ');
-        let lines = [];
-        let currentLine = ingLabel;
-        let currentFont = helveticaBold;
-        let isFirstWord = true;
+        let ingOffset = 0;
 
-        // Wrap ingredients
-        const ingWords = label.ingredients.split(' ');
-        let ingLine = 'Ingredients: ';
-        let ingLines = [];
-        ingWords.forEach(word => {
-          const testLine = ingLine + word + ' ';
-          const testW = helvetica.widthOfTextAtSize(testLine, ingFontSize);
-          if (testW > maxW && ingLine.length > 0) {
-            ingLines.push(ingLine.trim());
-            ingLine = word + ' ';
-          } else {
-            ingLine = testLine;
-          }
-        });
-        if (ingLine.trim()) ingLines.push(ingLine.trim());
+        // "Ingredients:" bold header on same line as first ingredient
+        if (label.ingredients) {
+          const allIngLines = wrapText('Ingredients: ' + label.ingredients, helvetica, ingSz, maxW);
+          allIngLines.forEach((line, li) => {
+            const ly = y - ingLineH * (li + 1);
+            const font = li === 0 ? helveticaBold : helvetica;
+            if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: ingSz, font, color: PDFLib.rgb(0.1,0.1,0.1) });
+          });
+          ingOffset = allIngLines.length;
+        }
 
-        // Draw ingredients
-        ingLines.forEach((line, idx) => {
-          const font = idx === 0 ? helveticaBold : helvetica;
-          const lineY = y - (idx + 1) * (ingFontSize + 1.5);
-          if (lineY > contentBottom + 2) {
-            page.drawText(line, { x: 6, y: lineY, size: ingFontSize, font, color: PDFLib.rgb(0.15, 0.15, 0.15), maxWidth: maxW });
-          }
-        });
+        // Gap between ingredients and contains
+        ingOffset += 0.5;
 
-        // Contains allergens
+        // Contains allergens — bold, slightly bigger, separated
         if (label.allergens) {
-          const algY = y - (ingLines.length + 1) * (ingFontSize + 1.5);
-          if (algY > contentBottom + 2) {
-            const algText = `Contains: ${label.allergens}.`;
-            page.drawText(algText, { x: 6, y: algY, size: ingFontSize, font: helveticaBold, color: PDFLib.rgb(0, 0, 0), maxWidth: maxW });
-          }
+          const algSz = algFontSz;
+          const algText = `Contains: ${label.allergens}.`;
+          const algLines = wrapText(algText, helveticaBold, algSz, maxW);
+          const algLineH = algSz + 2;
+          algLines.forEach((line, li) => {
+            const ly = y - ingLineH * ingOffset - algLineH * (li + 1);
+            if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: algSz, font: helveticaBold, color: PDFLib.rgb(0,0,0) });
+          });
         }
 
         const pct = 5 + Math.round(((i + 1) / labels.length) * 90);
