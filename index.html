@@ -279,7 +279,7 @@
   /* ── PREVIEW ── */
   .label-preview {
     width: 100%;
-    aspect-ratio: 3/2;
+    aspect-ratio: 2/3;
     background: #fff;
     border-radius: 6px;
     overflow: hidden;
@@ -298,30 +298,32 @@
     gap: 6px;
     flex-shrink: 0;
   }
-  .lp-header-text { font-size: 8px; font-weight: 900; color: #fff; letter-spacing: 0.1em; text-transform: uppercase; }
+  .lp-header-text { font-size: 7px; font-weight: 900; color: #fff; letter-spacing: 0.1em; text-transform: uppercase; }
 
   .lp-body { flex: 1; padding: 5px 8px; display: flex; flex-direction: column; overflow: hidden; }
 
-  .lp-meal-name { font-size: 11px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 0.02em; text-align: center; margin-bottom: 4px; line-height: 1.1; }
+  .lp-meal-name { font-size: 10px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 0.02em; text-align: center; margin-bottom: 4px; line-height: 1.1; }
 
-  .lp-macros { display: flex; justify-content: space-around; margin-bottom: 4px; padding: 3px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
+  .lp-macros { display: flex; justify-content: space-around; margin-bottom: 4px; padding: 3px 0; border-top: 1px solid #000; border-bottom: 1px solid #000; }
   .lp-macro { text-align: center; }
-  .lp-macro-label { font-size: 5px; font-weight: 800; color: #000; letter-spacing: 0.1em; text-transform: uppercase; display: block; }
-  .lp-macro-val { font-size: 8px; font-weight: 900; color: #000; display: block; }
+  .lp-macro-label { font-size: 4px; font-weight: 800; color: #555; letter-spacing: 0.1em; text-transform: uppercase; display: block; }
+  .lp-macro-val { font-size: 7px; font-weight: 900; color: #000; display: block; }
 
-  .lp-ingredients { font-size: 5px; color: #333; line-height: 1.4; text-align: center; flex: 1; overflow: hidden; }
+  .lp-ingredients { font-size: 5px; color: #333; line-height: 1.4; flex: 1; overflow: hidden; }
   .lp-ingredients strong { font-weight: 800; }
 
   .lp-footer {
     background: #000;
-    padding: 3px 8px;
+    padding: 4px 8px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    gap: 1px;
   }
-  .lp-footer-left { font-size: 5px; font-weight: 700; color: #fff; letter-spacing: 0.08em; text-transform: uppercase; }
-  .lp-footer-right { font-size: 5px; font-weight: 600; color: #aaa; text-align: right; }
+  .lp-footer-bestby { font-size: 6px; font-weight: 900; color: #fff; text-align: center; }
+  .lp-footer-ref { font-size: 5px; color: #aaa; text-align: center; }
 
   /* ── SUMMARY ── */
   .summary-list { display: flex; flex-direction: column; gap: 8px; }
@@ -649,8 +651,8 @@
           </div>
         </div>
         <div class="lp-footer">
-          <div class="lp-footer-left" id="prev-tagline">Chef Prepared · No Seed Oils · Fresh Ingredients</div>
-          <div class="lp-footer-right" id="prev-bestby">Best By: –<br>Keep Refrigerated</div>
+          <div class="lp-footer-bestby" id="prev-bestby">Best By: –</div>
+          <div class="lp-footer-ref">Keep Refrigerated</div>
         </div>
       </div>
       <p style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center;">Preview updates as you type</p>
@@ -1044,10 +1046,10 @@
     ingEl.style.fontSize = ingSz + 'pt';
 
     const bestBy = document.getElementById('best-by')?.value || '–';
-    document.getElementById('prev-bestby').innerHTML = `Best By: ${bestBy}<br>Keep Refrigerated`;
+    document.getElementById('prev-bestby').textContent = `Best By: ${bestBy}`;
 
     const tagline = document.getElementById('tagline')?.value || '';
-    document.getElementById('prev-tagline').textContent = tagline;
+    // tagline no longer shown in preview footer
   }
 
   // ── SUMMARY ──
@@ -1153,12 +1155,11 @@
     setProgress(5, `Building ${labels.length} labels...`);
 
     try {
-      // Label dimensions: 3" x 2" = 216 x 144 pts
-      const LW = 216;
-      const LH = 144;
+      // Label dimensions: 2" x 3" PORTRAIT = 144 x 216 pts
+      const LW = 144;
+      const LH = 216;
 
       const pdfDoc = await PDFLib.PDFDocument.create();
-
       const helveticaBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
       const helvetica = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
 
@@ -1167,7 +1168,6 @@
         const words = text.split(' ');
         const lines = [];
         let current = '';
-        // Add a small safety margin (3pts) to account for rendering differences
         const safeMax = maxWidth - 3;
         words.forEach(word => {
           const test = current ? current + ' ' + word : word;
@@ -1182,8 +1182,15 @@
         return lines;
       }
 
-      const ingFontSz = parseFloat(document.getElementById('ing-font-size')?.value || 6);
-      const algFontSz = parseFloat(document.getElementById('alg-font-size')?.value || 6);
+      // Clean all label text before PDF rendering
+      labels.forEach(l => {
+        l.name        = cleanText(l.name);
+        l.ingredients = cleanText(l.ingredients);
+        l.allergens   = cleanText(l.allergens);
+        l.tagline     = cleanText(l.tagline);
+        l.bestBy      = cleanText(l.bestBy);
+        l.variant     = cleanText(l.variant);
+      });
 
       for (let i = 0; i < labels.length; i++) {
         const label = labels[i];
@@ -1195,52 +1202,58 @@
         const headerH = 20;
         page.drawRectangle({ x: 0, y: LH - headerH, width: LW, height: headerH, color: PDFLib.rgb(0, 0, 0) });
         const headerText = 'MACRO FRESH MEALS';
-        const headerSz = 10;
+        const headerSz = 9;
         const headerW = helveticaBold.widthOfTextAtSize(headerText, headerSz);
         page.drawText(headerText, {
           x: (LW - headerW) / 2, y: LH - headerH + 6,
           size: headerSz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
         });
 
-        // ── FOOTER BAR ──
-        const footerH = 20;
+        // ── FOOTER BAR — Best By + Keep Refrigerated, centered, no tagline ──
+        const footerH = 26;
         page.drawRectangle({ x: 0, y: 0, width: LW, height: footerH, color: PDFLib.rgb(0, 0, 0) });
-        const tagSz = 5.5;
-        if (tagline) {
-          page.drawText(tagline, {
-            x: PAD, y: (footerH - tagSz) / 2,
-            size: tagSz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
+
+        const bestBySz = 7.5;
+        const refSz = 6.5;
+        const lineGap = 3;
+
+        const byText = label.bestBy ? `Best By: ${label.bestBy}` : '';
+        const refText = 'Keep Refrigerated';
+
+        if (byText) {
+          const byW = helveticaBold.widthOfTextAtSize(byText, bestBySz);
+          page.drawText(byText, {
+            x: (LW - byW) / 2,
+            y: footerH / 2 + lineGap,
+            size: bestBySz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
           });
         }
-        const bySz = 5.5;
-        if (label.bestBy) {
-          const byText = `Best By: ${label.bestBy}`;
-          const byW = helveticaBold.widthOfTextAtSize(byText, bySz);
-          page.drawText(byText, { x: LW - byW - PAD, y: footerH / 2 + 1, size: bySz, font: helveticaBold, color: PDFLib.rgb(1,1,1) });
-        }
-        const refText = 'Keep Refrigerated';
-        const refW = helvetica.widthOfTextAtSize(refText, bySz);
-        page.drawText(refText, { x: LW - refW - PAD, y: footerH / 2 - 6, size: bySz, font: helvetica, color: PDFLib.rgb(0.7,0.7,0.7) });
+        const refW = helvetica.widthOfTextAtSize(refText, refSz);
+        page.drawText(refText, {
+          x: (LW - refW) / 2,
+          y: footerH / 2 - refSz - lineGap + 4,
+          size: refSz, font: helvetica, color: PDFLib.rgb(0.75, 0.75, 0.75),
+        });
 
         // ── CONTENT AREA ──
-        let y = LH - headerH - 4;
+        let y = LH - headerH - 5;
         const bottomLimit = footerH + 4;
         const hasVariant = !!label.variant;
 
-        // Variant badge — compact, inline style
+        // Variant badge
         if (hasVariant) {
           const vSz = 6.5;
           const vText = `— ${label.variant} —`;
           const vW = helveticaBold.widthOfTextAtSize(vText, vSz);
           page.drawText(vText, {
-            x: (LW - vW) / 2, y: y - 7,
+            x: (LW - vW) / 2, y: y - 8,
             size: vSz, font: helveticaBold, color: PDFLib.rgb(0.35, 0.35, 0.35),
           });
-          y -= 10;
+          y -= 11;
         }
 
-        // ── MEAL NAME — smaller when variant present to save space ──
-        let nameSz = hasVariant ? 13 : 16;
+        // ── MEAL NAME ──
+        let nameSz = hasVariant ? 13 : 15;
         while (nameSz > 8 && helveticaBold.widthOfTextAtSize(label.name, nameSz) > maxW) {
           nameSz -= 1;
         }
@@ -1253,13 +1266,13 @@
             size: nameSz, font: helveticaBold, color: PDFLib.rgb(0, 0, 0),
           });
         });
-        y -= nameLineH * nameLines.length + 2;
+        y -= nameLineH * nameLines.length + 3;
 
         // ── DIVIDER ──
         page.drawLine({ start: { x: PAD, y }, end: { x: LW - PAD, y }, thickness: 0.75, color: PDFLib.rgb(0, 0, 0) });
         y -= 3;
 
-        // ── MACROS ──
+        // ── MACROS — 4 columns in portrait width ──
         const macros = [
           { label: 'CARBS',   val: label.carbs   ? `${label.carbs}g`   : '–' },
           { label: 'FAT',     val: label.fat     ? `${label.fat}g`     : '–' },
@@ -1267,59 +1280,48 @@
           { label: 'CALS',    val: label.calories || '–' },
         ];
         const macroColW = LW / 4;
-        const macroLabelSz = 5.5;
-        const macroValSz = 10;
-        const macroLabelY = y - 6;
-        const macroValY = y - 16;
+        const macroLabelSz = 5;
+        const macroValSz = 9;
         macros.forEach((m, idx) => {
           const cx = macroColW * idx + macroColW / 2;
           const lW = helveticaBold.widthOfTextAtSize(m.label, macroLabelSz);
           const vW = helveticaBold.widthOfTextAtSize(m.val, macroValSz);
-          page.drawText(m.label, { x: cx - lW/2, y: macroLabelY, size: macroLabelSz, font: helveticaBold, color: PDFLib.rgb(0.45,0.45,0.45) });
-          page.drawText(m.val,   { x: cx - vW/2, y: macroValY,   size: macroValSz,   font: helveticaBold, color: PDFLib.rgb(0,0,0) });
+          page.drawText(m.label, { x: cx - lW/2, y: y - 6,  size: macroLabelSz, font: helveticaBold, color: PDFLib.rgb(0.45,0.45,0.45) });
+          page.drawText(m.val,   { x: cx - vW/2, y: y - 16, size: macroValSz,   font: helveticaBold, color: PDFLib.rgb(0,0,0) });
         });
-        y -= 20;
+        y -= 19;
 
         // ── DIVIDER ──
         page.drawLine({ start: { x: PAD, y }, end: { x: LW - PAD, y }, thickness: 0.75, color: PDFLib.rgb(0,0,0) });
         y -= 3;
 
-        // ── INGREDIENTS — measure with bold for first line, regular for rest ──
+        // ── INGREDIENTS — first line bold (measured correctly), rest regular ──
         const ingSz = ingFontSz;
         const ingLineH = ingSz + 2;
         let ingOffset = 0;
 
         if (label.ingredients) {
-          // First line measured with bold (since "Ingredients:" is bold)
-          const ingPrefix = 'Ingredients: ';
-          const ingBody = label.ingredients;
-          const fullIngText = ingPrefix + ingBody;
-
-          // Measure first line using bold font (correct measurement)
+          const fullIngText = 'Ingredients: ' + label.ingredients;
           const firstLineWords = fullIngText.split(' ');
           let firstLine = '';
-          let remainder = '';
-          let firstLineDone = false;
+          let remainderStart = firstLineWords.length;
           for (let w = 0; w < firstLineWords.length; w++) {
             const word = firstLineWords[w];
             const test = firstLine ? firstLine + ' ' + word : word;
-            if (!firstLineDone && helveticaBold.widthOfTextAtSize(test, ingSz) > maxW - 3) {
-              firstLineDone = true;
-              remainder = firstLineWords.slice(w).join(' ');
+            if (helveticaBold.widthOfTextAtSize(test, ingSz) > maxW - 3) {
+              remainderStart = w;
               break;
             }
-            if (!firstLineDone) firstLine = test;
+            firstLine = test;
           }
-          if (!remainder && firstLine) remainder = '';
+          const remainder = firstLineWords.slice(remainderStart).join(' ');
 
-          // Draw first line in bold
           const ly0 = y - ingLineH;
           if (ly0 > bottomLimit) {
             page.drawText(firstLine || fullIngText, { x: PAD, y: ly0, size: ingSz, font: helveticaBold, color: PDFLib.rgb(0.05,0.05,0.05), maxWidth: maxW });
           }
           ingOffset = 1;
 
-          // Wrap and draw remaining lines in regular
           if (remainder) {
             const restLines = wrapText(remainder, helvetica, ingSz, maxW);
             restLines.forEach((line, li) => {
@@ -1330,8 +1332,8 @@
           }
         }
 
-        // Gap
-        ingOffset += 0.4;
+        // Full line break gap before Contains
+        ingOffset += 1.2;
 
         // ── CONTAINS ──
         if (label.allergens) {
