@@ -1036,7 +1036,12 @@
     const alg = document.getElementById(`allergens-${id}`)?.value || '';
     let ingHtml = '<strong>Ingredients:</strong> ' + (ing || 'Add ingredients above...');
     if (alg) ingHtml += ` <strong>Contains: ${alg}.</strong>`;
-    document.getElementById('prev-ingredients').innerHTML = ingHtml;
+    const ingEl = document.getElementById('prev-ingredients');
+    ingEl.innerHTML = ingHtml;
+
+    // Update preview font size from dropdown
+    const ingSz = document.getElementById('ing-font-size')?.value || '6';
+    ingEl.style.fontSize = ingSz + 'pt';
 
     const bestBy = document.getElementById('best-by')?.value || '–';
     document.getElementById('prev-bestby').innerHTML = `Best By: ${bestBy}<br>Keep Refrigerated`;
@@ -1157,14 +1162,16 @@
       const helveticaBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
       const helvetica = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
 
-      // Word wrap helper
+      // Word wrap helper — pass the ACTUAL font that will be used for rendering
       function wrapText(text, font, fontSize, maxWidth) {
         const words = text.split(' ');
         const lines = [];
         let current = '';
+        // Add a small safety margin (3pts) to account for rendering differences
+        const safeMax = maxWidth - 3;
         words.forEach(word => {
           const test = current ? current + ' ' + word : word;
-          if (font.widthOfTextAtSize(test, fontSize) > maxWidth && current) {
+          if (font.widthOfTextAtSize(test, fontSize) > safeMax && current) {
             lines.push(current);
             current = word;
           } else {
@@ -1195,11 +1202,9 @@
           size: headerSz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
         });
 
-        // ── FOOTER BAR (taller, vertically centered text) ──
+        // ── FOOTER BAR ──
         const footerH = 20;
         page.drawRectangle({ x: 0, y: 0, width: LW, height: footerH, color: PDFLib.rgb(0, 0, 0) });
-
-        // Tagline left — vertically centered in footer
         const tagSz = 5.5;
         if (tagline) {
           page.drawText(tagline, {
@@ -1207,8 +1212,6 @@
             size: tagSz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
           });
         }
-
-        // Best By + Keep Refrigerated — right side, stacked
         const bySz = 5.5;
         if (label.bestBy) {
           const byText = `Best By: ${label.bestBy}`;
@@ -1222,22 +1225,23 @@
         // ── CONTENT AREA ──
         let y = LH - headerH - 4;
         const bottomLimit = footerH + 4;
+        const hasVariant = !!label.variant;
 
-        // Variant badge
-        if (label.variant) {
-          const vSz = 7;
+        // Variant badge — compact, inline style
+        if (hasVariant) {
+          const vSz = 6.5;
           const vText = `— ${label.variant} —`;
           const vW = helveticaBold.widthOfTextAtSize(vText, vSz);
           page.drawText(vText, {
-            x: (LW - vW) / 2, y: y - 8,
+            x: (LW - vW) / 2, y: y - 7,
             size: vSz, font: helveticaBold, color: PDFLib.rgb(0.35, 0.35, 0.35),
           });
-          y -= 11;
+          y -= 10;
         }
 
-        // ── MEAL NAME ──
-        let nameSz = 16;
-        while (nameSz > 9 && helveticaBold.widthOfTextAtSize(label.name, nameSz) > maxW) {
+        // ── MEAL NAME — smaller when variant present to save space ──
+        let nameSz = hasVariant ? 13 : 16;
+        while (nameSz > 8 && helveticaBold.widthOfTextAtSize(label.name, nameSz) > maxW) {
           nameSz -= 1;
         }
         const nameLines = wrapText(label.name, helveticaBold, nameSz, maxW);
@@ -1249,13 +1253,13 @@
             size: nameSz, font: helveticaBold, color: PDFLib.rgb(0, 0, 0),
           });
         });
-        y -= nameLineH * nameLines.length + 3;
+        y -= nameLineH * nameLines.length + 2;
 
         // ── DIVIDER ──
         page.drawLine({ start: { x: PAD, y }, end: { x: LW - PAD, y }, thickness: 0.75, color: PDFLib.rgb(0, 0, 0) });
         y -= 3;
 
-        // ── MACROS (tighter spacing) ──
+        // ── MACROS ──
         const macros = [
           { label: 'CARBS',   val: label.carbs   ? `${label.carbs}g`   : '–' },
           { label: 'FAT',     val: label.fat     ? `${label.fat}g`     : '–' },
@@ -1280,27 +1284,56 @@
         page.drawLine({ start: { x: PAD, y }, end: { x: LW - PAD, y }, thickness: 0.75, color: PDFLib.rgb(0,0,0) });
         y -= 3;
 
-        // ── INGREDIENTS ──
+        // ── INGREDIENTS — measure with bold for first line, regular for rest ──
         const ingSz = ingFontSz;
         const ingLineH = ingSz + 2;
-
         let ingOffset = 0;
 
-        // "Ingredients:" bold header on same line as first ingredient
         if (label.ingredients) {
-          const allIngLines = wrapText('Ingredients: ' + label.ingredients, helvetica, ingSz, maxW);
-          allIngLines.forEach((line, li) => {
-            const ly = y - ingLineH * (li + 1);
-            const font = li === 0 ? helveticaBold : helvetica;
-            if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: ingSz, font, color: PDFLib.rgb(0.1,0.1,0.1) });
-          });
-          ingOffset = allIngLines.length;
+          // First line measured with bold (since "Ingredients:" is bold)
+          const ingPrefix = 'Ingredients: ';
+          const ingBody = label.ingredients;
+          const fullIngText = ingPrefix + ingBody;
+
+          // Measure first line using bold font (correct measurement)
+          const firstLineWords = fullIngText.split(' ');
+          let firstLine = '';
+          let remainder = '';
+          let firstLineDone = false;
+          for (let w = 0; w < firstLineWords.length; w++) {
+            const word = firstLineWords[w];
+            const test = firstLine ? firstLine + ' ' + word : word;
+            if (!firstLineDone && helveticaBold.widthOfTextAtSize(test, ingSz) > maxW - 3) {
+              firstLineDone = true;
+              remainder = firstLineWords.slice(w).join(' ');
+              break;
+            }
+            if (!firstLineDone) firstLine = test;
+          }
+          if (!remainder && firstLine) remainder = '';
+
+          // Draw first line in bold
+          const ly0 = y - ingLineH;
+          if (ly0 > bottomLimit) {
+            page.drawText(firstLine || fullIngText, { x: PAD, y: ly0, size: ingSz, font: helveticaBold, color: PDFLib.rgb(0.05,0.05,0.05), maxWidth: maxW });
+          }
+          ingOffset = 1;
+
+          // Wrap and draw remaining lines in regular
+          if (remainder) {
+            const restLines = wrapText(remainder, helvetica, ingSz, maxW);
+            restLines.forEach((line, li) => {
+              const ly = y - ingLineH * (ingOffset + li + 1);
+              if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: ingSz, font: helvetica, color: PDFLib.rgb(0.1,0.1,0.1), maxWidth: maxW });
+            });
+            ingOffset += restLines.length;
+          }
         }
 
-        // Gap between ingredients and contains
-        ingOffset += 0.5;
+        // Gap
+        ingOffset += 0.4;
 
-        // Contains allergens — bold, slightly bigger, separated
+        // ── CONTAINS ──
         if (label.allergens) {
           const algSz = algFontSz;
           const algText = `Contains: ${label.allergens}.`;
@@ -1308,7 +1341,7 @@
           const algLineH = algSz + 2;
           algLines.forEach((line, li) => {
             const ly = y - ingLineH * ingOffset - algLineH * (li + 1);
-            if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: algSz, font: helveticaBold, color: PDFLib.rgb(0,0,0) });
+            if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: algSz, font: helveticaBold, color: PDFLib.rgb(0,0,0), maxWidth: maxW });
           });
         }
 
