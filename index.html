@@ -634,7 +634,8 @@
     <!-- LIVE PREVIEW -->
     <div class="sidebar-section">
       <div class="sidebar-title">Label Preview</div>
-      <div class="label-preview" id="label-preview">
+      <div style="display:flex;justify-content:center;">
+        <div class="label-preview" id="label-preview" style="width:180px;flex-shrink:0;">
         <div class="lp-header">
           <div class="lp-header-text">MACRO FRESH MEALS 🍽</div>
         </div>
@@ -654,6 +655,8 @@
           <div class="lp-footer-bestby" id="prev-bestby">Best By: –</div>
           <div class="lp-footer-ref">Keep Refrigerated</div>
         </div>
+      </div>
+      </div>
       </div>
       <p style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center;">Preview updates as you type</p>
     </div>
@@ -1037,7 +1040,7 @@
     const ing = document.getElementById(`ingredients-${id}`)?.value || '';
     const alg = document.getElementById(`allergens-${id}`)?.value || '';
     let ingHtml = '<strong>Ingredients:</strong> ' + (ing || 'Add ingredients above...');
-    if (alg) ingHtml += ` <strong>Contains: ${alg}.</strong>`;
+    if (alg) ingHtml += `<br><strong>Contains: ${alg}.</strong>`;
     const ingEl = document.getElementById('prev-ingredients');
     ingEl.innerHTML = ingHtml;
 
@@ -1181,6 +1184,14 @@
         if (current) lines.push(current);
         return lines;
       }
+
+      // Sanitize text — strip newlines and extra whitespace that break WinAnsi encoding
+      function cleanText(str) {
+        return (str || '').replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+
+      const ingFontSz = parseFloat(document.getElementById('ing-font-size')?.value || 6);
+      const algFontSz = parseFloat(document.getElementById('alg-font-size')?.value || 6);
 
       // Clean all label text before PDF rendering
       labels.forEach(l => {
