@@ -313,17 +313,13 @@
   .lp-ingredients strong { font-weight: 800; }
 
   .lp-footer {
-    background: #000;
     padding: 4px 8px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    gap: 1px;
   }
-  .lp-footer-bestby { font-size: 6px; font-weight: 900; color: #fff; text-align: center; }
-  .lp-footer-ref { font-size: 5px; color: #aaa; text-align: center; }
+  .lp-footer-bestby { font-size: 5px; font-weight: 700; color: #000; text-align: center; }
 
   /* ── SUMMARY ── */
   .summary-list { display: flex; flex-direction: column; gap: 8px; }
@@ -573,9 +569,29 @@
           <label>Best By Date</label>
           <input type="text" id="best-by" placeholder="e.g. 5/11" oninput="updatePreview()">
         </div>
-        <div class="field-group">
-          <label>Bottom Tagline</label>
-          <input type="text" id="tagline" value="Chef Prepared · No Seed Oils · Fresh Ingredients" oninput="updatePreview()">
+      </div>
+      <div class="global-row" style="margin-bottom:12px;">
+        <div class="field-group" style="max-width:160px;">
+          <label>Meal Name Font Size</label>
+          <select id="name-font-size" oninput="updatePreview()">
+            <option value="10">10pt — Very Small</option>
+            <option value="12">12pt — Small</option>
+            <option value="14">14pt — Medium</option>
+            <option value="17" selected>17pt — Default</option>
+            <option value="19">19pt — Large</option>
+            <option value="21">21pt — Very Large</option>
+          </select>
+        </div>
+        <div class="field-group" style="max-width:160px;">
+          <label>Macro Values Font Size</label>
+          <select id="macro-font-size" oninput="updatePreview()">
+            <option value="8">8pt — Very Small</option>
+            <option value="9">9pt — Small</option>
+            <option value="10">10pt — Medium</option>
+            <option value="11" selected>11pt — Default</option>
+            <option value="13">13pt — Large</option>
+            <option value="15">15pt — Very Large</option>
+          </select>
         </div>
       </div>
       <div class="global-row">
@@ -604,7 +620,7 @@
           </select>
         </div>
         <div class="field-group" style="max-width:200px; align-self:flex-end;">
-          <p style="font-size:10px;color:var(--muted);line-height:1.5;">Adjust if ingredients overflow or leave too much space</p>
+          <p style="font-size:10px;color:var(--muted);line-height:1.5;">Adjust sizes if content overflows or leaves too much space</p>
         </div>
       </div>
     </div>
@@ -652,8 +668,7 @@
           </div>
         </div>
         <div class="lp-footer">
-          <div class="lp-footer-bestby" id="prev-bestby">Best By: –</div>
-          <div class="lp-footer-ref">Keep Refrigerated</div>
+          <div class="lp-footer-bestby" id="prev-bestby">Best By: – · Keep Refrigerated</div>
         </div>
       </div>
       </div>
@@ -1049,10 +1064,8 @@
     ingEl.style.fontSize = ingSz + 'pt';
 
     const bestBy = document.getElementById('best-by')?.value || '–';
-    document.getElementById('prev-bestby').textContent = `Best By: ${bestBy}`;
-
-    const tagline = document.getElementById('tagline')?.value || '';
-    // tagline no longer shown in preview footer
+    const footerText = bestBy && bestBy !== '–' ? `Best By: ${bestBy}  ·  Keep Refrigerated` : 'Keep Refrigerated';
+    document.getElementById('prev-bestby').textContent = footerText;
   }
 
   // ── SUMMARY ──
@@ -1190,8 +1203,10 @@
         return (str || '').replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
       }
 
-      const ingFontSz = parseFloat(document.getElementById('ing-font-size')?.value || 6);
-      const algFontSz = parseFloat(document.getElementById('alg-font-size')?.value || 6);
+      const ingFontSz  = parseFloat(document.getElementById('ing-font-size')?.value  || 6);
+      const algFontSz  = parseFloat(document.getElementById('alg-font-size')?.value  || 6);
+      const nameFontSz = parseFloat(document.getElementById('name-font-size')?.value || 17);
+      const macroValFontSz = parseFloat(document.getElementById('macro-font-size')?.value || 11);
 
       // Clean all label text before PDF rendering
       labels.forEach(l => {
@@ -1210,45 +1225,31 @@
         const maxW = LW - PAD * 2;
 
         // ── HEADER BAR ──
-        const headerH = 22;
+        const headerH = 20;
         page.drawRectangle({ x: 0, y: LH - headerH, width: LW, height: headerH, color: PDFLib.rgb(0, 0, 0) });
         const headerText = 'MACRO FRESH MEALS';
-        const headerSz = 12;
+        const headerSz = 10;
         const headerW = helveticaBold.widthOfTextAtSize(headerText, headerSz);
         page.drawText(headerText, {
-          x: (LW - headerW) / 2, y: LH - headerH + 7,
+          x: (LW - headerW) / 2, y: LH - headerH + 6,
           size: headerSz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
         });
 
-        // ── FOOTER BAR ──
-        const footerH = 22;
-        page.drawRectangle({ x: 0, y: 0, width: LW, height: footerH, color: PDFLib.rgb(0, 0, 0) });
-
-        const bestBySz = 8.5;
-        const refSz = 7;
-        const lineGap = 2;
-
-        const byText = label.bestBy ? `Best By: ${label.bestBy}` : '';
-        const refText = 'Keep Refrigerated';
-
-        if (byText) {
-          const byW = helveticaBold.widthOfTextAtSize(byText, bestBySz);
-          page.drawText(byText, {
-            x: (LW - byW) / 2,
-            y: footerH / 2 + lineGap + 1,
-            size: bestBySz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
-          });
-        }
-        const refW = helvetica.widthOfTextAtSize(refText, refSz);
-        page.drawText(refText, {
-          x: (LW - refW) / 2,
-          y: footerH / 2 - refSz - lineGap + 4,
-          size: refSz, font: helvetica, color: PDFLib.rgb(0.75, 0.75, 0.75),
+        // ── FOOTER — inline, black text, no background bar ──
+        const footerH = 14;
+        const footerSz = 7;
+        const bestByPart = label.bestBy ? `Best By: ${label.bestBy}` : '';
+        const footerText = bestByPart ? `${bestByPart}  ·  Keep Refrigerated` : 'Keep Refrigerated';
+        const footerW = helveticaBold.widthOfTextAtSize(footerText, footerSz);
+        page.drawText(footerText, {
+          x: (LW - footerW) / 2,
+          y: 4,
+          size: footerSz, font: helveticaBold, color: PDFLib.rgb(0, 0, 0),
         });
 
         // ── CONTENT AREA ──
         let y = LH - headerH - 4;
-        const bottomLimit = footerH + 4;
+        const bottomLimit = footerH;
         const hasVariant = !!label.variant;
 
         // Variant badge
@@ -1263,8 +1264,8 @@
           y -= 12;
         }
 
-        // ── MEAL NAME ──
-        let nameSz = hasVariant ? 14 : 17;
+        // ── MEAL NAME — uses dropdown size, auto-shrinks if too wide ──
+        let nameSz = hasVariant ? Math.max(9, nameFontSz - 3) : nameFontSz;
         while (nameSz > 9 && helveticaBold.widthOfTextAtSize(label.name, nameSz) > maxW) {
           nameSz -= 1;
         }
@@ -1283,7 +1284,7 @@
         page.drawLine({ start: { x: PAD, y }, end: { x: LW - PAD, y }, thickness: 0.75, color: PDFLib.rgb(0, 0, 0) });
         y -= 3;
 
-        // ── MACROS ──
+        // ── MACROS — uses dropdown size ──
         const macros = [
           { label: 'CARBS',   val: label.carbs   ? `${label.carbs}g`   : '–' },
           { label: 'FAT',     val: label.fat     ? `${label.fat}g`     : '–' },
@@ -1291,16 +1292,17 @@
           { label: 'CALS',    val: label.calories || '–' },
         ];
         const macroColW = LW / 4;
-        const macroLabelSz = 6.5;
-        const macroValSz = 11;
+        const macroLabelSz = 6;
+        const macroValSz = macroValFontSz;
+        const macroTotalH = macroLabelSz + macroValSz + 4;
         macros.forEach((m, idx) => {
           const cx = macroColW * idx + macroColW / 2;
           const lW = helveticaBold.widthOfTextAtSize(m.label, macroLabelSz);
           const vW = helveticaBold.widthOfTextAtSize(m.val, macroValSz);
           page.drawText(m.label, { x: cx - lW/2, y: y - 7,  size: macroLabelSz, font: helveticaBold, color: PDFLib.rgb(0.45,0.45,0.45) });
-          page.drawText(m.val,   { x: cx - vW/2, y: y - 18, size: macroValSz,   font: helveticaBold, color: PDFLib.rgb(0,0,0) });
+          page.drawText(m.val,   { x: cx - vW/2, y: y - 7 - macroValSz - 1, size: macroValSz, font: helveticaBold, color: PDFLib.rgb(0,0,0) });
         });
-        y -= 22;
+        y -= macroTotalH + 4;
 
         // ── DIVIDER ──
         page.drawLine({ start: { x: PAD, y }, end: { x: LW - PAD, y }, thickness: 0.75, color: PDFLib.rgb(0,0,0) });
