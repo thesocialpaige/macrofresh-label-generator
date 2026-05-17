@@ -1301,37 +1301,34 @@
           size: headerSz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1),
         });
 
-        // ── FOOTER — inline, black text, no background bar ──
+        // ── FOOTER — variant badge left, best-by right (or centered if no variant) ──
         const footerH = 14;
         const footerSz = 7;
         const bestByPart = label.bestBy ? `Best By: ${label.bestBy}` : '';
-        const footerText = bestByPart ? `${bestByPart}  ·  Keep Refrigerated` : 'Keep Refrigerated';
-        const footerW = helveticaBold.widthOfTextAtSize(footerText, footerSz);
-        page.drawText(footerText, {
-          x: (LW - footerW) / 2,
-          y: 4,
-          size: footerSz, font: helveticaBold, color: PDFLib.rgb(0, 0, 0),
-        });
+        const bestByText = bestByPart ? `${bestByPart}  ·  Keep Refrigerated` : 'Keep Refrigerated';
+        const hasVariant = !!label.variant;
+
+        if (hasVariant) {
+          const badgeSz = 7;
+          const badgeText = label.variant;
+          const badgeTextW = helveticaBold.widthOfTextAtSize(badgeText, badgeSz);
+          const badgePad = 5;
+          const badgeW = badgeTextW + badgePad * 2;
+          page.drawRectangle({ x: 0, y: 0, width: badgeW, height: footerH, color: PDFLib.rgb(0, 0, 0) });
+          page.drawText(badgeText, { x: badgePad, y: 4, size: badgeSz, font: helveticaBold, color: PDFLib.rgb(1, 1, 1) });
+          const bestByW = helveticaBold.widthOfTextAtSize(bestByText, footerSz);
+          page.drawText(bestByText, { x: LW - bestByW - PAD, y: 4, size: footerSz, font: helveticaBold, color: PDFLib.rgb(0, 0, 0) });
+        } else {
+          const footerW = helveticaBold.widthOfTextAtSize(bestByText, footerSz);
+          page.drawText(bestByText, { x: (LW - footerW) / 2, y: 4, size: footerSz, font: helveticaBold, color: PDFLib.rgb(0, 0, 0) });
+        }
 
         // ── CONTENT AREA ──
         let y = LH - headerH - 4;
         const bottomLimit = footerH;
-        const hasVariant = !!label.variant;
-
-        // Variant badge
-        if (hasVariant) {
-          const vSz = 8;
-          const vText = `— ${label.variant} —`;
-          const vW = helveticaBold.widthOfTextAtSize(vText, vSz);
-          page.drawText(vText, {
-            x: (LW - vW) / 2, y: y - 9,
-            size: vSz, font: helveticaBold, color: PDFLib.rgb(0.35, 0.35, 0.35),
-          });
-          y -= 12;
-        }
 
         // ── MEAL NAME — uses dropdown size, auto-shrinks if too wide ──
-        let nameSz = hasVariant ? Math.max(9, nameFontSz - 3) : nameFontSz;
+        let nameSz = nameFontSz;
         while (nameSz > 9 && helveticaBold.widthOfTextAtSize(label.name, nameSz) > maxW) {
           nameSz -= 1;
         }
