@@ -306,7 +306,7 @@
 
   .lp-macros { display: flex; justify-content: space-around; margin-bottom: 4px; padding: 3px 0; border-top: 1px solid #000; border-bottom: 1px solid #000; }
   .lp-macro { text-align: center; }
-  .lp-macro-label { font-size: 4px; font-weight: 800; color: #555; letter-spacing: 0.1em; text-transform: uppercase; display: block; }
+  .lp-macro-label { font-size: 4px; font-weight: 800; color: #000; letter-spacing: 0.1em; text-transform: uppercase; display: block; }
   .lp-macro-val { font-size: 7px; font-weight: 900; color: #000; display: block; }
 
   .lp-ingredients { font-size: 5px; color: #333; line-height: 1.4; flex: 1; overflow: hidden; }
@@ -573,22 +573,22 @@
       <div class="global-row" style="margin-bottom:12px;">
         <div class="field-group" style="max-width:160px;">
           <label>Meal Name Font Size</label>
-          <select id="name-font-size" oninput="updatePreview()">
+          <select id="name-font-size" onchange="updatePreview()">
             <option value="10">10pt — Very Small</option>
-            <option value="12">12pt — Small</option>
+            <option value="12" selected>12pt — Small</option>
             <option value="14">14pt — Medium</option>
-            <option value="17" selected>17pt — Default</option>
-            <option value="19">19pt — Large</option>
-            <option value="21">21pt — Very Large</option>
+            <option value="17">17pt — Large</option>
+            <option value="19">19pt — Very Large</option>
+            <option value="21">21pt — Extra Large</option>
           </select>
         </div>
         <div class="field-group" style="max-width:160px;">
           <label>Macro Values Font Size</label>
-          <select id="macro-font-size" oninput="updatePreview()">
+          <select id="macro-font-size" onchange="updatePreview()">
             <option value="8">8pt — Very Small</option>
             <option value="9">9pt — Small</option>
-            <option value="10">10pt — Medium</option>
-            <option value="11" selected>11pt — Default</option>
+            <option value="10" selected>10pt — Default</option>
+            <option value="11">11pt — Medium</option>
             <option value="13">13pt — Large</option>
             <option value="15">15pt — Very Large</option>
           </select>
@@ -597,7 +597,7 @@
       <div class="global-row">
         <div class="field-group" style="max-width:160px;">
           <label>Ingredients Font Size</label>
-          <select id="ing-font-size" oninput="updatePreview()">
+          <select id="ing-font-size" onchange="updatePreview()">
             <option value="5">5pt — Very Small</option>
             <option value="5.5">5.5pt — Small</option>
             <option value="6" selected>6pt — Default</option>
@@ -609,7 +609,7 @@
         </div>
         <div class="field-group" style="max-width:160px;">
           <label>Contains Font Size</label>
-          <select id="alg-font-size" oninput="updatePreview()">
+          <select id="alg-font-size" onchange="updatePreview()">
             <option value="5">5pt — Very Small</option>
             <option value="5.5">5.5pt — Small</option>
             <option value="6" selected>6pt — Default</option>
@@ -674,6 +674,7 @@
       </div>
       </div>
       <p style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center;">Preview updates as you type</p>
+      <div id="preview-overflow-warning" style="display:none;color:#ef4444;font-size:10px;margin-top:6px;text-align:center;font-weight:700;">⚠ Content is being cut off. Reduce font sizes.</div>
     </div>
 
     <!-- PRINT SUMMARY -->
@@ -1046,26 +1047,47 @@
     if (!firstMeal) return;
     const id = firstMeal.id.replace('meal-', '');
 
-    document.getElementById('prev-name').textContent = document.getElementById(`name-${id}`)?.value?.toUpperCase() || 'MEAL NAME';
+    const nameSz = parseFloat(document.getElementById('name-font-size')?.value || 12);
+    const macroValSz = parseFloat(document.getElementById('macro-font-size')?.value || 10);
+    const ingSz = document.getElementById('ing-font-size')?.value || '6';
+    const algSz = document.getElementById('alg-font-size')?.value || '6';
+
+    // Scale: preview is 270px wide representing 216pt (3" at 72dpi)
+    const scale = 270 / 216;
+
+    const nameEl = document.getElementById('prev-name');
+    nameEl.textContent = document.getElementById(`name-${id}`)?.value?.toUpperCase() || 'MEAL NAME';
+    nameEl.style.fontSize = (nameSz * scale) + 'px';
+
     document.getElementById('prev-carbs').textContent = document.getElementById(`carbs-${id}`)?.value || '–';
     document.getElementById('prev-fat').textContent = document.getElementById(`fat-${id}`)?.value || '–';
     document.getElementById('prev-protein').textContent = document.getElementById(`protein-${id}`)?.value || '–';
     document.getElementById('prev-calories').textContent = document.getElementById(`calories-${id}`)?.value || '–';
 
+    document.querySelectorAll('#label-preview .lp-macro-val').forEach(el => {
+      el.style.fontSize = (macroValSz * scale) + 'px';
+    });
+    document.querySelectorAll('#label-preview .lp-macro-label').forEach(el => {
+      el.style.fontSize = (6 * scale) + 'px';
+    });
+
     const ing = document.getElementById(`ingredients-${id}`)?.value || '';
     const alg = document.getElementById(`allergens-${id}`)?.value || '';
-    let ingHtml = '<strong>Ingredients:</strong> ' + (ing || 'Add ingredients above...');
-    if (alg) ingHtml += `<br><strong>Contains: ${alg}.</strong>`;
+
+    let ingHtml = `<span style="font-size:${ingSz}pt"><strong>Ingredients:</strong> ${ing || 'Add ingredients above...'}</span>`;
+    if (alg) ingHtml += `<span style="font-size:${algSz}pt"> <strong>Contains:</strong> ${alg}.</span>`;
+
     const ingEl = document.getElementById('prev-ingredients');
     ingEl.innerHTML = ingHtml;
-
-    // Update preview font size from dropdown
-    const ingSz = document.getElementById('ing-font-size')?.value || '6';
-    ingEl.style.fontSize = ingSz + 'pt';
 
     const bestBy = document.getElementById('best-by')?.value || '–';
     const footerText = bestBy && bestBy !== '–' ? `Best By: ${bestBy}  ·  Keep Refrigerated` : 'Keep Refrigerated';
     document.getElementById('prev-bestby').textContent = footerText;
+
+    requestAnimationFrame(() => {
+      const warning = document.getElementById('preview-overflow-warning');
+      if (warning) warning.style.display = ingEl.scrollHeight > ingEl.clientHeight + 2 ? 'block' : 'none';
+    });
   }
 
   // ── SUMMARY ──
@@ -1218,6 +1240,8 @@
         l.variant     = cleanText(l.variant);
       });
 
+      const cutoffLabels = [];
+
       for (let i = 0; i < labels.length; i++) {
         const label = labels[i];
         const page = pdfDoc.addPage([LW, LH]);
@@ -1308,60 +1332,85 @@
         page.drawLine({ start: { x: PAD, y }, end: { x: LW - PAD, y }, thickness: 0.75, color: PDFLib.rgb(0,0,0) });
         y -= 3;
 
-        // ── INGREDIENTS — first line bold (measured correctly), rest regular ──
+        // ── INGREDIENTS — only "Ingredients:" is bold ──
         const ingSz = ingFontSz;
         const ingLineH = ingSz + 2;
         let ingOffset = 0;
 
         if (label.ingredients) {
-          const fullIngText = 'Ingredients: ' + label.ingredients;
-          const firstLineWords = fullIngText.split(' ');
+          const ingLabel = 'Ingredients:';
+          const ingLabelW = helveticaBold.widthOfTextAtSize(ingLabel + ' ', ingSz);
+          const firstLineMaxW = maxW - ingLabelW - 3;
+
+          const ingWords = label.ingredients.split(' ');
           let firstLine = '';
-          let remainderStart = firstLineWords.length;
-          for (let w = 0; w < firstLineWords.length; w++) {
-            const word = firstLineWords[w];
-            const test = firstLine ? firstLine + ' ' + word : word;
-            if (helveticaBold.widthOfTextAtSize(test, ingSz) > maxW - 3) {
-              remainderStart = w;
-              break;
-            }
+          let wordIdx = 0;
+          for (; wordIdx < ingWords.length; wordIdx++) {
+            const test = firstLine ? firstLine + ' ' + ingWords[wordIdx] : ingWords[wordIdx];
+            if (helvetica.widthOfTextAtSize(test, ingSz) > firstLineMaxW) break;
             firstLine = test;
           }
-          const remainder = firstLineWords.slice(remainderStart).join(' ');
+          const remainderText = ingWords.slice(wordIdx).join(' ');
+          const remainderLines = remainderText ? wrapText(remainderText, helvetica, ingSz, maxW) : [];
 
           const ly0 = y - ingLineH;
           if (ly0 > bottomLimit) {
-            page.drawText(firstLine || fullIngText, { x: PAD, y: ly0, size: ingSz, font: helveticaBold, color: PDFLib.rgb(0.05,0.05,0.05), maxWidth: maxW });
+            page.drawText(ingLabel, { x: PAD, y: ly0, size: ingSz, font: helveticaBold, color: PDFLib.rgb(0.05,0.05,0.05) });
+            if (firstLine) page.drawText(firstLine, { x: PAD + ingLabelW, y: ly0, size: ingSz, font: helvetica, color: PDFLib.rgb(0.1,0.1,0.1) });
           }
           ingOffset = 1;
 
-          if (remainder) {
-            const restLines = wrapText(remainder, helvetica, ingSz, maxW);
-            restLines.forEach((line, li) => {
-              const ly = y - ingLineH * (ingOffset + li + 1);
-              if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: ingSz, font: helvetica, color: PDFLib.rgb(0.1,0.1,0.1), maxWidth: maxW });
-            });
-            ingOffset += restLines.length;
-          }
+          remainderLines.forEach((line, li) => {
+            const ly = y - ingLineH * (ingOffset + li + 1);
+            if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: ingSz, font: helvetica, color: PDFLib.rgb(0.1,0.1,0.1) });
+          });
+          ingOffset += remainderLines.length;
         }
 
-        // Full line break gap before Contains
-        ingOffset += 1.2;
-
-        // ── CONTAINS ──
+        // ── CONTAINS — immediately after ingredients, only "Contains:" is bold ──
         if (label.allergens) {
           const algSz = algFontSz;
-          const algText = `Contains: ${label.allergens}.`;
-          const algLines = wrapText(algText, helveticaBold, algSz, maxW);
           const algLineH = algSz + 2;
-          algLines.forEach((line, li) => {
-            const ly = y - ingLineH * ingOffset - algLineH * (li + 1);
-            if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: algSz, font: helveticaBold, color: PDFLib.rgb(0,0,0), maxWidth: maxW });
+          const algLabel = 'Contains:';
+          const algLabelW = helveticaBold.widthOfTextAtSize(algLabel + ' ', algSz);
+          const algFirstLineMaxW = maxW - algLabelW - 3;
+
+          const algWords = (label.allergens + '.').split(' ');
+          let algFirstLine = '';
+          let algWordIdx = 0;
+          for (; algWordIdx < algWords.length; algWordIdx++) {
+            const test = algFirstLine ? algFirstLine + ' ' + algWords[algWordIdx] : algWords[algWordIdx];
+            if (helvetica.widthOfTextAtSize(test, algSz) > algFirstLineMaxW) break;
+            algFirstLine = test;
+          }
+          const algRemainderText = algWords.slice(algWordIdx).join(' ');
+          const algRemainderLines = algRemainderText ? wrapText(algRemainderText, helvetica, algSz, maxW) : [];
+
+          let algCutoff = false;
+          const algY0 = y - ingLineH * ingOffset - algLineH;
+          if (algY0 > bottomLimit) {
+            page.drawText(algLabel, { x: PAD, y: algY0, size: algSz, font: helveticaBold, color: PDFLib.rgb(0,0,0) });
+            if (algFirstLine) page.drawText(algFirstLine, { x: PAD + algLabelW, y: algY0, size: algSz, font: helvetica, color: PDFLib.rgb(0,0,0) });
+          } else {
+            algCutoff = true;
+          }
+
+          algRemainderLines.forEach((line, li) => {
+            const ly = y - ingLineH * ingOffset - algLineH * (li + 2);
+            if (ly > bottomLimit) page.drawText(line, { x: PAD, y: ly, size: algSz, font: helvetica, color: PDFLib.rgb(0,0,0) });
+            else algCutoff = true;
           });
+
+          if (algCutoff) cutoffLabels.push(label.name || 'Unknown');
         }
 
         const pct = 5 + Math.round(((i + 1) / labels.length) * 90);
         setProgress(pct, `Label ${i + 1} of ${labels.length}...`);
+      }
+
+      if (cutoffLabels.length > 0) {
+        const uniqueNames = [...new Set(cutoffLabels)];
+        alert(`⚠ The following labels may have cut-off allergen text:\n\n${uniqueNames.join('\n')}\n\nReduce the Ingredients or Contains font size and regenerate.`);
       }
 
       setProgress(98, 'Finalizing...');
