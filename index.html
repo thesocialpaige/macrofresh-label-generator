@@ -1084,10 +1084,52 @@
     const footerText = bestBy && bestBy !== '–' ? `Best By: ${bestBy}  ·  Keep Refrigerated` : 'Keep Refrigerated';
     document.getElementById('prev-bestby').textContent = footerText;
 
-    requestAnimationFrame(() => {
-      const warning = document.getElementById('preview-overflow-warning');
-      if (warning) warning.style.display = ingEl.scrollHeight > ingEl.clientHeight + 2 ? 'block' : 'none';
-    });
+    // Simulate PDF layout math to detect if Contains will be cut off
+    // Uses same constants as generatePDF: LW=216, LH=144, PAD=7, headerH=20, footerH=14
+    const PDF_MAX_W = 202;
+    const PDF_START_Y = 120; // LH(144) - headerH(20) - 4
+    const PDF_BOTTOM = 14;
+    const AVG_BOLD_W = 0.56;  // Helvetica Bold avg char width multiplier
+    const AVG_REG_W  = 0.48;  // Helvetica Regular avg char width multiplier
+
+    function estLines(text, fontSize, maxW, charMult) {
+      const words = (text || '').split(/\s+/).filter(Boolean);
+      if (!words.length) return 0;
+      let lines = 1, lineW = 0;
+      words.forEach(w => {
+        const wW = w.length * fontSize * charMult;
+        if (lineW > 0 && lineW + fontSize * charMult + wW > maxW) { lines++; lineW = wW; }
+        else lineW += (lineW > 0 ? fontSize * charMult : 0) + wW;
+      });
+      return lines;
+    }
+
+    let pdfY = PDF_START_Y;
+    const nameText = (document.getElementById(`name-${id}`)?.value || '').toUpperCase();
+    const nameLineH_pt = nameSz + 2;
+    pdfY -= nameLineH_pt * Math.max(1, estLines(nameText, nameSz, PDF_MAX_W, AVG_BOLD_W)) + 2;
+    pdfY -= 3 + (6 + parseFloat(macroValSz) + 8) + 3; // divider + macros + divider
+
+    const ingSzNum = parseFloat(ingSz);
+    const ingLineH_pt = ingSzNum + 2;
+    const ingLabelW = 'Ingredients: '.length * ingSzNum * AVG_BOLD_W;
+    const ingBody = document.getElementById(`ingredients-${id}`)?.value || '';
+    const ingFirstWords = ingBody.split(/\s+/).filter(Boolean);
+    let ingFirstLine = '', wi = 0;
+    for (; wi < ingFirstWords.length; wi++) {
+      const t = ingFirstLine ? ingFirstLine + ' ' + ingFirstWords[wi] : ingFirstWords[wi];
+      if (t.length * ingSzNum * AVG_REG_W > PDF_MAX_W - ingLabelW) break;
+      ingFirstLine = t;
+    }
+    const ingRemainder = ingFirstWords.slice(wi).join(' ');
+    pdfY -= ingLineH_pt * (1 + (ingRemainder ? estLines(ingRemainder, ingSzNum, PDF_MAX_W, AVG_REG_W) : 0));
+
+    const algText = document.getElementById(`allergens-${id}`)?.value || '';
+    const algSzNum = parseFloat(algSz);
+    const willCutOff = algText && (pdfY - (algSzNum + 2)) <= PDF_BOTTOM;
+
+    const warning = document.getElementById('preview-overflow-warning');
+    if (warning) warning.style.display = willCutOff ? 'block' : 'none';
   }
 
   // ── SUMMARY ──
@@ -1323,7 +1365,7 @@
           const cx = macroColW * idx + macroColW / 2;
           const lW = helveticaBold.widthOfTextAtSize(m.label, macroLabelSz);
           const vW = helveticaBold.widthOfTextAtSize(m.val, macroValSz);
-          page.drawText(m.label, { x: cx - lW/2, y: y - 7,  size: macroLabelSz, font: helveticaBold, color: PDFLib.rgb(0.45,0.45,0.45) });
+          page.drawText(m.label, { x: cx - lW/2, y: y - 7,  size: macroLabelSz, font: helveticaBold, color: PDFLib.rgb(0,0,0) });
           page.drawText(m.val,   { x: cx - vW/2, y: y - 7 - macroValSz - 1, size: macroValSz, font: helveticaBold, color: PDFLib.rgb(0,0,0) });
         });
         y -= macroTotalH + 4;
